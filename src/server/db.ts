@@ -6,6 +6,12 @@ const createPrismaClient = () =>
   new PrismaClient({
     log:
       env.NODE_ENV === "development" ? ["error", "warn"] : ["error"],
+    // Optimize connection handling
+    datasources: {
+      db: {
+        url: env.DATABASE_URL,
+      },
+    },
   });
 
 const globalForPrisma = globalThis as unknown as {

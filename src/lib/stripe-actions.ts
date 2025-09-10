@@ -34,17 +34,22 @@ export async function createBillingPortalSession() {
     if (!userId) {
         return false
     }
-    const subscription = await db.stripeSubscription.findUnique({
-        where: { userId: userId },
-    });
-    if (!subscription?.customerId) {
-        throw new Error('Subscription not found');
+    try {
+        const subscription = await db.stripeSubscription.findUnique({
+            where: { userId: userId },
+        });
+        if (!subscription?.customerId) {
+            throw new Error('Subscription not found');
+        }
+        const session = await stripe.billingPortal.sessions.create({
+            customer: subscription.customerId,
+            return_url: `${process.env.NEXT_PUBLIC_URL}/pricing`,
+        });
+        redirect(session.url!)
+    } catch (error) {
+        console.error('Error creating billing portal session:', error);
+        throw error;
     }
-    const session = await stripe.billingPortal.sessions.create({
-        customer: subscription.customerId,
-        return_url: `${process.env.NEXT_PUBLIC_URL}/pricing`,
-    });
-    redirect(session.url!)
 }
 
 export async function getSubscriptionStatus() {
@@ -52,12 +57,18 @@ export async function getSubscriptionStatus() {
     if (!userId) {
         return false
     }
-    const subscription = await db.stripeSubscription.findUnique({
-        where: { userId: userId },
-    });
-    if (!subscription) {
+    try {
+        const subscription = await db.stripeSubscription.findUnique({
+            where: { userId: userId },
+        });
+        if (!subscription) {
+            return false;
+        }
+        return subscription.currentPeriodEnd > new Date();
+    } catch (error) {
+        console.error('Error getting subscription status:', error);
+        // Return false on database errors to prevent app crashes
         return false;
     }
-    return subscription.currentPeriodEnd > new Date();
 }
 

@@ -19,19 +19,16 @@ const LandingPage = async () => {
             </div>
             <div className="min-h-screen flex flex-col items-center pt-56 relative z-[10]">
                 <h1 className="bg-gradient-to-r text-center from-gray-600 font-bold text-6xl to-gray-900 inline-block text-transparent bg-clip-text">
-                    The minimalistic, <br />AI-powered email client.
+                    jambutty, <br />AI-powered email client.
                 </h1>
                 <div className="h-4"></div>
                 <p className="text-xl mb-8 text-gray-600 max-w-xl text-center">
-                    Normal Human is a minimalistic, AI-powered email client that empowers you to manage your email with ease.
+                    This is a  AI-powered email prototype.
                 </p>
                 <div className="space-x-4">
                     <Button>
                         <Link href="/mail">Get Started</Link>
                     </Button>
-                    <Link href='https://start-saas.com?utm=normalhuman'>
-                        <Button variant="outline" >Learn More</Button>
-                    </Link>
                 </div>
                 <div className="mt-12 max-w-5xl mx-auto">
                     <h2 className="text-2xl font-semibold mb-4 text-center">Experience the power of:</h2>

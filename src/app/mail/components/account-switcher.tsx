@@ -23,8 +23,22 @@ interface AccountSwitcherProps {
 export function AccountSwitcher({
   isCollapsed
 }: AccountSwitcherProps) {
-  const { data: accounts } = api.mail.getAccounts.useQuery()
+  const { data: accounts, error } = api.mail.getAccounts.useQuery()
   const [accountId, setAccountId] = useLocalStorage('accountId', '')
+
+  // Handle authentication errors
+  React.useEffect(() => {
+    if (error?.message === 'Unauthorized') {
+      toast.error('Please sign in to continue', {
+        action: {
+          label: 'Sign In',
+          onClick: () => {
+            window.location.href = '/sign-in'
+          }
+        }
+      })
+    }
+  }, [error])
 
   React.useEffect(() => {
     if (accounts && accounts.length > 0) {

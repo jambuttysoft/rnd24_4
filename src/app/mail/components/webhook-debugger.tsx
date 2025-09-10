@@ -18,9 +18,23 @@ import { toast } from "sonner"
 
 const WebhookDebugger = () => {
     const [accountId, setAccountId] = useLocalStorage('accountId', '')
-    const { data, isLoading, refetch } = api.webhooks.getWebhooks.useQuery({
+    const { data, isLoading, refetch, error } = api.webhooks.getWebhooks.useQuery({
         accountId
-    }, { enabled: !!accountId })
+    }, { enabled: !!accountId && accountId.trim() !== '' })
+
+    // Handle authentication errors
+    React.useEffect(() => {
+        if (error?.message === 'Unauthorized') {
+            toast.error('Please sign in to continue', {
+                action: {
+                    label: 'Sign In',
+                    onClick: () => {
+                        window.location.href = '/sign-in'
+                    }
+                }
+            })
+        }
+    }, [error])
 
     const createWebhook = api.webhooks.createWebhook.useMutation()
     const deleteWebhook = api.webhooks.deleteWebhook.useMutation()

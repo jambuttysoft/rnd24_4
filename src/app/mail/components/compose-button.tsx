@@ -24,7 +24,21 @@ const ComposeButton = () => {
     const [toValues, setToValues] = React.useState<{ label: string; value: string; }[]>([])
     const [ccValues, setCcValues] = React.useState<{ label: string; value: string; }[]>([])
     const [subject, setSubject] = React.useState<string>('')
-    const { data: account } = api.mail.getMyAccount.useQuery({ accountId }, { enabled: !!accountId })
+    const { data: account, error } = api.mail.getMyAccount.useQuery({ accountId }, { enabled: !!accountId && accountId.trim() !== '' })
+
+    // Handle authentication errors
+    React.useEffect(() => {
+        if (error?.message === 'Unauthorized') {
+            toast.error('Please sign in to continue', {
+                action: {
+                    label: 'Sign In',
+                    onClick: () => {
+                        window.location.href = '/sign-in'
+                    }
+                }
+            })
+        }
+    }, [error])
 
 
     React.useEffect(() => {

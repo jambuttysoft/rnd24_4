@@ -55,6 +55,20 @@ export function TRPCReactProvider(props: { children: React.ReactNode }) {
             headers.set("x-trpc-source", "nextjs-react");
             return headers;
           },
+          // Add connection stability options
+          fetch: (url, options) => {
+            return fetch(url, {
+              ...options,
+              // Add timeout to prevent hanging requests
+              signal: AbortSignal.timeout(30000),
+            }).catch((error) => {
+              // Handle network errors more gracefully
+              if (error.name === 'AbortError') {
+                throw new Error('Request timeout - please check your connection');
+              }
+              throw error;
+            });
+          },
         }),
       ],
     })

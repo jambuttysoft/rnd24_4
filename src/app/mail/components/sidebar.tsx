@@ -28,17 +28,17 @@ const SideBar = ({ isCollapsed }: Props) => {
     const { data: inboxThreads } = api.mail.getNumThreads.useQuery({
         accountId,
         tab: "inbox"
-    }, { enabled: !!accountId && !!tab, refetchInterval })
+    }, { enabled: !!accountId && accountId.trim() !== '' && !!tab, refetchInterval })
 
     const { data: draftsThreads } = api.mail.getNumThreads.useQuery({
         accountId,
         tab: "drafts"
-    }, { enabled: !!accountId && !!tab, refetchInterval })
+    }, { enabled: !!accountId && accountId.trim() !== '' && !!tab, refetchInterval })
 
     const { data: sentThreads } = api.mail.getNumThreads.useQuery({
         accountId,
         tab: "sent"
-    }, { enabled: !!accountId && !!tab, refetchInterval })
+    }, { enabled: !!accountId && accountId.trim() !== '' && !!tab, refetchInterval })
 
     return (
         <>

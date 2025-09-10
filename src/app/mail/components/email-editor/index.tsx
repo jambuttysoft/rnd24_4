@@ -40,7 +40,7 @@ const EmailEditor = ({ toValues, ccValues, subject, setSubject, to, handleSend, 
 
     const [ref] = useAutoAnimate();
     const [accountId] = useLocalStorage('accountId', '');
-    const { data: suggestions } = api.mail.getEmailSuggestions.useQuery({ accountId: accountId, query: '' }, { enabled: !!accountId });
+    const { data: suggestions } = api.mail.getEmailSuggestions.useQuery({ accountId: accountId, query: '' }, { enabled: !!accountId && accountId.trim() !== '' });
 
 
     const [expanded, setExpanded] = React.useState(defaultToolbarExpand ?? false);

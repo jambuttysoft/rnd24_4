@@ -347,7 +347,7 @@ export const mailRouter = createTRPCRouter({
         })
     }),
     getMyAccount: protectedProcedure.input(z.object({
-        accountId: z.string()
+        accountId: z.string().min(1, "Account ID cannot be empty")
     })).query(async ({ ctx, input }) => {
         const account = await authoriseAccountAccess(input.accountId, ctx.auth.userId)
         return account

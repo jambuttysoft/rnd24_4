@@ -15,18 +15,15 @@ import React from 'react'
 import { useLocalStorage } from "usehooks-ts"
 import { Input } from "@/components/ui/input"
 import { toast } from "sonner"
+import { useMountedAccount } from "@/hooks/use-mounted-account"
 
 const WebhookDebugger = () => {
-    const [accountId, setAccountId] = useLocalStorage('accountId', '')
-    const [isMounted, setIsMounted] = React.useState(false)
-    
-    React.useEffect(() => {
-        setIsMounted(true)
-    }, [])
+    const [, setAccountId] = useLocalStorage('accountId', '')
+    const { accountId, isReady } = useMountedAccount()
     
     const { data, isLoading, refetch, error } = api.webhooks.getWebhooks.useQuery({
-        accountId
-    }, { enabled: isMounted && !!accountId && accountId.trim() !== '' })
+        accountId: accountId || ''
+    }, { enabled: isReady && !!accountId })
 
     // Handle authentication errors
     React.useEffect(() => {
@@ -48,6 +45,11 @@ const WebhookDebugger = () => {
     const [newWebhookUrl, setNewWebhookUrl] = React.useState('')
 
     const handleCreateWebhook = async () => {
+        if (!newWebhookUrl.trim() || !accountId) {
+            toast.error('Please enter a valid webhook URL')
+            return
+        }
+        
         toast.promise(
             createWebhook.mutateAsync({
                 accountId,
@@ -69,6 +71,8 @@ const WebhookDebugger = () => {
     }
 
     const handleDeleteWebhook = async (webhookId: string) => {
+        if (!accountId) return
+        
         toast.promise(
             deleteWebhook.mutateAsync({
                 accountId,

@@ -6,7 +6,7 @@ import { getEmbeddings } from "@/lib/embeddings";
 
 export const searchRouter = createTRPCRouter({
     search: protectedProcedure.input(z.object({
-        accountId: z.string(),
+        accountId: z.string().min(1, "Account ID cannot be empty"),
         query: z.string(),
     })).mutation(async ({ input, ctx }) => {
         const account = await ctx.db.account.findFirst({

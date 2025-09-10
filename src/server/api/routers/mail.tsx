@@ -63,7 +63,7 @@ export const mailRouter = createTRPCRouter({
         })
     }),
     getNumThreads: protectedProcedure.input(z.object({
-        accountId: z.string(),
+        accountId: z.string().min(1, "Account ID cannot be empty"),
         tab: z.string()
     })).query(async ({ ctx, input }) => {
         const account = await authoriseAccountAccess(input.accountId, ctx.auth.userId)
@@ -80,7 +80,7 @@ export const mailRouter = createTRPCRouter({
         })
     }),
     getThreads: protectedProcedure.input(z.object({
-        accountId: z.string(),
+        accountId: z.string().min(1, "Account ID cannot be empty"),
         tab: z.string(),
         done: z.boolean()
     })).query(async ({ ctx, input }) => {
@@ -127,7 +127,7 @@ export const mailRouter = createTRPCRouter({
     }),
 
     getThreadById: protectedProcedure.input(z.object({
-        accountId: z.string(),
+        accountId: z.string().min(1, "Account ID cannot be empty"),
         threadId: z.string()
     })).query(async ({ ctx, input }) => {
         const account = await authoriseAccountAccess(input.accountId, ctx.auth.userId)
@@ -154,7 +154,7 @@ export const mailRouter = createTRPCRouter({
     }),
 
     getReplyDetails: protectedProcedure.input(z.object({
-        accountId: z.string(),
+        accountId: z.string().min(1, "Account ID cannot be empty"),
         threadId: z.string(),
         replyType: z.enum(['reply', 'replyAll'])
     })).query(async ({ ctx, input }) => {
@@ -214,7 +214,7 @@ export const mailRouter = createTRPCRouter({
     }),
 
     syncEmails: protectedProcedure.input(z.object({
-        accountId: z.string()
+        accountId: z.string().min(1, "Account ID cannot be empty")
     })).mutation(async ({ ctx, input }) => {
         const account = await authoriseAccountAccess(input.accountId, ctx.auth.userId)
         if (!account) throw new Error("Invalid token")

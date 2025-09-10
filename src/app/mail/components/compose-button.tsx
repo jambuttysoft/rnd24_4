@@ -17,20 +17,16 @@ import EmailEditor from "./email-editor"
 import { api } from "@/trpc/react"
 import { useLocalStorage } from "usehooks-ts"
 import { toast } from "sonner"
+import { useMountedAccount } from "@/hooks/use-mounted-account"
 
 const ComposeButton = () => {
     const [open, setOpen] = React.useState(false)
-    const [accountId] = useLocalStorage('accountId', '')
-    const [isMounted, setIsMounted] = React.useState(false)
+    const { accountId, isReady } = useMountedAccount()
     const [toValues, setToValues] = React.useState<{ label: string; value: string; }[]>([])
     const [ccValues, setCcValues] = React.useState<{ label: string; value: string; }[]>([])
     const [subject, setSubject] = React.useState<string>('')
     
-    React.useEffect(() => {
-        setIsMounted(true)
-    }, [])
-    
-    const { data: account, error } = api.mail.getMyAccount.useQuery({ accountId }, { enabled: isMounted && !!accountId && accountId.trim() !== '' })
+    const { data: account, error } = api.mail.getMyAccount.useQuery({ accountId: accountId || '' }, { enabled: isReady && !!accountId })
 
     // Handle authentication errors
     React.useEffect(() => {
@@ -67,7 +63,7 @@ const ComposeButton = () => {
     const handleSend = async (value: string) => {
         console.log(account)
         console.log({ value })
-        if (!account) return
+        if (!account || !accountId) return
         sendEmail.mutate({
             accountId,
             threadId: undefined,

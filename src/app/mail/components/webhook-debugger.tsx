@@ -18,9 +18,15 @@ import { toast } from "sonner"
 
 const WebhookDebugger = () => {
     const [accountId, setAccountId] = useLocalStorage('accountId', '')
+    const [isMounted, setIsMounted] = React.useState(false)
+    
+    React.useEffect(() => {
+        setIsMounted(true)
+    }, [])
+    
     const { data, isLoading, refetch, error } = api.webhooks.getWebhooks.useQuery({
         accountId
-    }, { enabled: !!accountId && accountId.trim() !== '' })
+    }, { enabled: isMounted && !!accountId && accountId.trim() !== '' })
 
     // Handle authentication errors
     React.useEffect(() => {

@@ -21,10 +21,16 @@ import { toast } from "sonner"
 const ComposeButton = () => {
     const [open, setOpen] = React.useState(false)
     const [accountId] = useLocalStorage('accountId', '')
+    const [isMounted, setIsMounted] = React.useState(false)
     const [toValues, setToValues] = React.useState<{ label: string; value: string; }[]>([])
     const [ccValues, setCcValues] = React.useState<{ label: string; value: string; }[]>([])
     const [subject, setSubject] = React.useState<string>('')
-    const { data: account, error } = api.mail.getMyAccount.useQuery({ accountId }, { enabled: !!accountId && accountId.trim() !== '' })
+    
+    React.useEffect(() => {
+        setIsMounted(true)
+    }, [])
+    
+    const { data: account, error } = api.mail.getMyAccount.useQuery({ accountId }, { enabled: isMounted && !!accountId && accountId.trim() !== '' })
 
     // Handle authentication errors
     React.useEffect(() => {

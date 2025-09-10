@@ -50,7 +50,7 @@ const LandingPage = async () => {
                         </div>
                     </div>
                 </div>
-                <Image src='/demo.png' alt='demo' width={1000} height={1000} className='my-12 border rounded-md transition-all hover:shadow-2xl hover:scale-[102%] shadow-xl w-[70vw] h-auto' />
+      
                 <div className="flex items-center space-x-4 mb-10">
                     <Link href="/sign-in" className="text-sm hover:underline">Sign In</Link>
                     <Link href="/sign-up" className="text-sm hover:underline">Sign Up</Link>

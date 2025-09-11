@@ -122,5 +122,6 @@ export const GET = async (req: NextRequest) => {
         console.log(`[${timestamp}] /api/aurinko/callback - Redirecting to /mail`)
     }
     
-    return NextResponse.redirect(new URL('/mail', req.url))
+    return NextResponse.redirect(new URL('/mail', process.env.NEXT_PUBLIC_URL!))
+    
 }

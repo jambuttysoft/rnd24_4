@@ -14,7 +14,7 @@ const nextConfig = {
     ignoreDuringBuilds: true,
   },
   reactStrictMode: false,
-  allowedDevOrigins: ['rnd244.jambutty.com'],
+  allowedDevOrigins: ['localhost'],
 };
 
 export default nextConfig;

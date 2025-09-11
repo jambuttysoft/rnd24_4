@@ -2,7 +2,7 @@ import Nylas from "nylas";
 
 const config = {
     clientId: process.env.NYLAS_CLIENT_ID!,
-    callbackUri: "https://rnd244.jambutty.com/oauth/exchange",
+    callbackUri: "http://localhost:3001/oauth/exchange",
     apiKey: process.env.NYLAS_API_KEY!,
     apiUri: "https://api.us.nylas.com",
 };

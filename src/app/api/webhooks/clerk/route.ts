@@ -17,11 +17,47 @@ export const POST = async (req: Request) => {
         console.log(`[${timestamp}] /api/webhooks/clerk - User data:`, JSON.stringify(data, null, 2))
     }
     
-    const emailAddress = data.email_addresses[0].email_address;
+    // Handle user deletion event
+    if (data.deleted) {
+        const userId = data.id;
+        
+        if (process.env.NODE_ENV === 'development') {
+            console.log(`[${timestamp}] /api/webhooks/clerk - Processing user deletion:`, userId)
+        }
+        
+        try {
+            // Delete user and related data
+            await db.user.delete({
+                where: { id: userId }
+            });
+            
+            if (process.env.NODE_ENV === 'development') {
+                console.log(`[${timestamp}] /api/webhooks/clerk - User deleted successfully:`, userId)
+            }
+            
+            return new Response('User deleted', { status: 200 });
+        } catch (error) {
+            if (process.env.NODE_ENV === 'development') {
+                console.error(`[${timestamp}] /api/webhooks/clerk - Error deleting user:`, error)
+            }
+            console.error('Error deleting user in clerk webhook:', error)
+            return new Response('Internal server error', { status: 500 });
+        }
+    }
+    
+    // Handle user creation/update events
+    const emailAddress = data.email_addresses?.[0]?.email_address;
     const firstName = data.first_name;
     const lastName = data.last_name;
     const imageUrl = data.image_url;
     const id = data.id;
+    
+    if (!emailAddress) {
+        if (process.env.NODE_ENV === 'development') {
+            console.error(`[${timestamp}] /api/webhooks/clerk - No email address found in user data`)
+        }
+        return new Response('No email address found', { status: 400 });
+    }
     
     if (process.env.NODE_ENV === 'development') {
         console.log(`[${timestamp}] /api/webhooks/clerk - Extracted user info:`, {

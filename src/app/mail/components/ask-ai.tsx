@@ -27,6 +27,8 @@ const AskAI = ({ isCollapsed }: { isCollapsed: boolean }) => {
         onError: (error) => {
             if (error.message.includes('Limit reached')) {
                 toast.error('You have reached the limit for today. Please upgrade to pro to ask as many questions as you want')
+            } else if (error.message.includes("don't have access to your email context")) {
+                toast.error('Please select an account first to access your email context')
             }
         },
         initialMessages: [],
@@ -84,22 +86,29 @@ const AskAI = ({ isCollapsed }: { isCollapsed: boolean }) => {
                             <span onClick={() => handleInputChange({
                                 target: {
                                     value: 'What can I ask?'
-                                }
-                            })} className='px-2 py-1 bg-gray-800 text-gray-200 rounded-md text-xs'>What can I ask?</span>
+                                } as EventTarget & HTMLInputElement
+                            } as React.ChangeEvent<HTMLInputElement>)} className='px-2 py-1 bg-gray-800 text-gray-200 rounded-md text-xs'>What can I ask?</span>
                             <span onClick={() => handleInputChange({
                                 target: {
                                     value: 'When is my next flight?'
-                                }
-                            })} className='px-2 py-1 bg-gray-800 text-gray-200 rounded-md text-xs'>When is my next flight?</span>
+                                } as EventTarget & HTMLInputElement
+                            } as React.ChangeEvent<HTMLInputElement>)} className='px-2 py-1 bg-gray-800 text-gray-200 rounded-md text-xs'>When is my next flight?</span>
                             <span onClick={() => handleInputChange({
                                 target: {
                                     value: 'When is my next meeting?'
-                                }
-                            })} className='px-2 py-1 bg-gray-800 text-gray-200 rounded-md text-xs'>When is my next meeting?</span>
+                                } as EventTarget & HTMLInputElement
+                            } as React.ChangeEvent<HTMLInputElement>)} className='px-2 py-1 bg-gray-800 text-gray-200 rounded-md text-xs'>When is my next meeting?</span>
                         </div>
                     </div>
                     }
-                    <form onSubmit={handleSubmit} className="flex w-full">
+                    <form onSubmit={(e) => {
+                        if (!accountId) {
+                            e.preventDefault()
+                            toast.error('Please select an account first to access your email context')
+                            return
+                        }
+                        handleSubmit(e)
+                    }} className="flex w-full">
                         <input
                             type="text"
                             onChange={handleInputChange}
@@ -107,7 +116,8 @@ const AskAI = ({ isCollapsed }: { isCollapsed: boolean }) => {
                             className="py- relative h-9 placeholder:text-[13px] flex-grow rounded-full border border-gray-200 bg-white px-3 text-[15px] outline-none placeholder:text-gray-400 focus-visible:ring-0 focus-visible:ring-blue-500/20 focus-visible:ring-offset-1
             dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-400 dark:focus-visible:ring-blue-500/20 dark:focus-visible:ring-offset-1 dark:focus-visible:ring-offset-gray-700
             "
-                            placeholder="Ask AI anything about your emails"
+                            placeholder={accountId ? "Ask AI anything about your emails" : "Please select an account first..."}
+                            disabled={!accountId}
                         />
                         <motion.div
                             key={messages.length}
@@ -127,6 +137,7 @@ const AskAI = ({ isCollapsed }: { isCollapsed: boolean }) => {
                             type="submit"
                             className="ml-2 flex h-9 w-9 items-center justify-center rounded-full bg-gray-200
             dark:bg-gray-800"
+                            disabled={!accountId}
                         >
                             <Send className="size-4 text-gray-500 dark:text-gray-300" />
                         </button>

@@ -12,7 +12,7 @@
     "dev": "next dev --turbo --port 3001 | egrep -v '^\\s?(GET|POST|OPTIONS)'",
     "postinstall": "prisma generate",
     "lint": "next lint",
-    "start": "next start"
+    "start": "next start -p 3001"
   },
   "dependencies": {
     "@ai-sdk/openai": "^0.0.60",

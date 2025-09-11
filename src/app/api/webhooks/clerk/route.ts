@@ -26,13 +26,83 @@ export const POST = async (req: Request) => {
         }
         
         try {
-            // Delete user and related data
+            // Delete user and related data in correct order to avoid foreign key constraints
+            if (process.env.NODE_ENV === 'development') {
+                console.log(`[${timestamp}] /api/webhooks/clerk - Starting cascading deletion for user:`, userId)
+            }
+            
+            // Get all user accounts first
+            const userAccounts = await db.account.findMany({
+                where: { userId },
+                select: { id: true }
+            });
+            
+            if (userAccounts.length > 0) {
+                const accountIds = userAccounts.map(acc => acc.id);
+                
+                // Delete email attachments first
+                await db.emailAttachment.deleteMany({
+                    where: {
+                        Email: {
+                            thread: {
+                                accountId: { in: accountIds }
+                            }
+                        }
+                    }
+                });
+                
+                // Delete emails
+                await db.email.deleteMany({
+                    where: {
+                        thread: {
+                            accountId: { in: accountIds }
+                        }
+                    }
+                });
+                
+                // Delete threads
+                await db.thread.deleteMany({
+                    where: {
+                        accountId: { in: accountIds }
+                    }
+                });
+                
+                // Delete email addresses
+                await db.emailAddress.deleteMany({
+                    where: {
+                        accountId: { in: accountIds }
+                    }
+                });
+                
+                // Delete accounts
+                await db.account.deleteMany({
+                    where: {
+                        userId
+                    }
+                });
+            }
+            
+            // Delete chatbot interactions
+            await db.chatbotInteraction.deleteMany({
+                where: {
+                    userId
+                }
+            });
+            
+            // Delete stripe subscription if exists
+            await db.stripeSubscription.deleteMany({
+                where: {
+                    userId
+                }
+            });
+            
+            // Finally delete the user
             await db.user.delete({
                 where: { id: userId }
             });
             
             if (process.env.NODE_ENV === 'development') {
-                console.log(`[${timestamp}] /api/webhooks/clerk - User deleted successfully:`, userId)
+                console.log(`[${timestamp}] /api/webhooks/clerk - User and all related data deleted successfully:`, userId)
             }
             
             return new Response('User deleted', { status: 200 });

@@ -35,23 +35,44 @@ export const POST = async (req: Request) => {
 
     try {
         if (process.env.NODE_ENV === 'development') {
-            console.log(`[${timestamp}] /api/webhooks/clerk - Upserting user:`, id)
+            console.log(`[${timestamp}] /api/webhooks/clerk - Checking existing user by email:`, emailAddress)
         }
         
-        await db.user.upsert({
-            where: { id },
-            update: { emailAddress, firstName, lastName, imageUrl },
-            create: { id, emailAddress, firstName, lastName, imageUrl },
+        // First check if user exists by email
+        const existingUserByEmail = await db.user.findUnique({
+            where: { emailAddress }
         });
         
+        if (existingUserByEmail && existingUserByEmail.id !== id) {
+            if (process.env.NODE_ENV === 'development') {
+                console.log(`[${timestamp}] /api/webhooks/clerk - Email already exists for different user:`, existingUserByEmail.id)
+            }
+            // Update the existing user with new Clerk ID and data
+            await db.user.update({
+                where: { emailAddress },
+                data: { id, firstName, lastName, imageUrl }
+            });
+        } else {
+            // Safe to upsert by ID
+            if (process.env.NODE_ENV === 'development') {
+                console.log(`[${timestamp}] /api/webhooks/clerk - Upserting user:`, id)
+            }
+            
+            await db.user.upsert({
+                where: { id },
+                update: { emailAddress, firstName, lastName, imageUrl },
+                create: { id, emailAddress, firstName, lastName, imageUrl },
+            });
+        }
+        
         if (process.env.NODE_ENV === 'development') {
-            console.log(`[${timestamp}] /api/webhooks/clerk - User upserted successfully:`, id)
+            console.log(`[${timestamp}] /api/webhooks/clerk - User processed successfully:`, id)
         }
         
         return new Response('Webhook received', { status: 200 });
     } catch (error) {
         if (process.env.NODE_ENV === 'development') {
-            console.error(`[${timestamp}] /api/webhooks/clerk - Error upserting user:`, error)
+            console.error(`[${timestamp}] /api/webhooks/clerk - Error processing user:`, error)
         }
         console.error('Error in clerk webhook:', error)
         return new Response('Internal server error', { status: 500 });

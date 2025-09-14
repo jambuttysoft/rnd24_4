@@ -73,6 +73,8 @@ export const POST = async (req: NextRequest) => {
         subscription: number;
         resource: string;
         accountId: number;
+        error?: string;
+        lifecycleEvent?: string;
         payloads: {
             id: string;
             changeType: string;
@@ -89,6 +91,28 @@ export const POST = async (req: NextRequest) => {
     }
     
     console.log("Received notification:", JSON.stringify(payload, null, 2));
+    
+    // Handle error notifications (like 'Active token is missing')
+    if (payload.error || payload.lifecycleEvent === 'error') {
+        console.error('Webhook error received:', payload.error || 'Unknown error');
+        
+        if (payload.error === 'Active token is missing') {
+            console.log('Token missing for account:', payload.accountId);
+            // Mark account as needing re-authorization
+            await db.account.update({
+                where: {
+                    id: payload.accountId.toString()
+                },
+                data: {
+                    nextDeltaToken: null // Reset delta token to force re-sync
+                }
+            }).catch(error => {
+                console.error('Failed to update account after token error:', error);
+            });
+        }
+        
+        return new Response('Error notification processed', { status: 200 });
+    }
     
     if (process.env.NODE_ENV === 'development') {
         console.log(`[${timestamp}] /api/aurinko/webhook - Looking up account:`, payload.accountId)

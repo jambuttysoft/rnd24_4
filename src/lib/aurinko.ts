@@ -40,7 +40,9 @@ export const getAurinkoAuthorizationUrl = async (serviceType: 'Google' | 'Office
     const params = new URLSearchParams({
         clientId: process.env.AURINKO_CLIENT_ID as string,
         serviceType,
-        scopes: 'Mail.Read Mail.ReadWrite Mail.Send Mail.Drafts Mail.All',
+        scopes: serviceType === 'Google' 
+            ? 'Mail.Read Mail.ReadWrite Mail.Send Mail.Drafts Mail.All https://www.googleapis.com/auth/gmail.readonly https://www.googleapis.com/auth/gmail.metadata'
+            : 'Mail.Read Mail.ReadWrite Mail.Send Mail.Drafts Mail.All',
         responseType: 'code',
         returnUrl: `${process.env.NEXT_PUBLIC_URL}/api/aurinko/callback`,
     });

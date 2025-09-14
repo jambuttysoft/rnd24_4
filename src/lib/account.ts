@@ -50,7 +50,31 @@ class Account {
             },
         })
         if (!account) throw new Error("Invalid token")
-        if (!account.nextDeltaToken) throw new Error("No delta token")
+        
+        // If no delta token exists, perform initial sync
+        if (!account.nextDeltaToken) {
+            console.log('No delta token found, performing initial sync...')
+            const initialSyncResult = await this.performInitialSync()
+            if (!initialSyncResult) throw new Error("Failed to perform initial sync")
+            
+            try {
+                await syncEmailsToDatabase(initialSyncResult.emails, account.id)
+            } catch (error) {
+                console.log('error during initial sync to database', error)
+            }
+            
+            await db.account.update({
+                where: {
+                    id: account.id,
+                },
+                data: {
+                    nextDeltaToken: initialSyncResult.deltaToken,
+                }
+            })
+            return
+        }
+        
+        // Perform incremental sync with existing delta token
         let response = await this.getUpdatedEmails({ deltaToken: account.nextDeltaToken })
         let allEmails: EmailMessage[] = response.records
         let storedDeltaToken = account.nextDeltaToken
@@ -66,7 +90,6 @@ class Account {
         }
 
         if (!response) throw new Error("Failed to sync emails")
-
 
         try {
             await syncEmailsToDatabase(allEmails, account.id)

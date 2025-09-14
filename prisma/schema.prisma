@@ -62,7 +62,7 @@ model StripeSubscription {
 }
 
 model Account {
-    id     String @id @default(cuid())
+    id     String @id
     userId String
 
     binaryIndex Json?

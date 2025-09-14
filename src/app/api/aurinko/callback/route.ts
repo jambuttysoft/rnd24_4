@@ -101,20 +101,29 @@ export const GET = async (req: NextRequest) => {
         })
     }
     
-    const upsertedAccount = await db.account.upsert({
-        where: { id: token.accountId.toString() },
-        create: accountData,
-        update: {
-            token: token.accessToken,
-        }
-    })
-    
-    if (process.env.NODE_ENV === 'development') {
-        console.log(`[${timestamp}] /api/aurinko/callback - Account upserted:`, {
-            id: upsertedAccount.id,
-            userId: upsertedAccount.userId,
-            email: upsertedAccount.emailAddress
+    let upsertedAccount;
+    try {
+        upsertedAccount = await db.account.upsert({
+            where: { id: token.accountId.toString() },
+            create: accountData,
+            update: {
+                token: token.accessToken,
+            }
         })
+        
+        if (process.env.NODE_ENV === 'development') {
+            console.log(`[${timestamp}] /api/aurinko/callback - Account upserted:`, {
+                id: upsertedAccount.id,
+                userId: upsertedAccount.userId,
+                email: upsertedAccount.emailAddress
+            })
+        }
+    } catch (error) {
+        console.error(`[${timestamp}] /api/aurinko/callback - Account upsert failed:`, error)
+        if (process.env.NODE_ENV === 'development') {
+            console.error(`[${timestamp}] /api/aurinko/callback - Account data that failed:`, accountData)
+        }
+        return NextResponse.json({ error: "Failed to save account" }, { status: 500 });
     }
     
     if (process.env.NODE_ENV === 'development') {

@@ -7,9 +7,24 @@ import { type NextRequest, NextResponse } from "next/server";
 export const maxDuration = 300
 
 export const POST = async (req: NextRequest) => {
+    const timestamp = new Date().toISOString()
     const body = await req.json()
     const { accountId, userId } = body
-    if (!accountId || !userId) return NextResponse.json({ error: "INVALID_REQUEST" }, { status: 400 });
+    
+    if (process.env.NODE_ENV === 'development') {
+        console.log(`[${timestamp}] /api/initial-sync - Request received:`, { accountId, userId })
+    }
+    
+    if (!accountId || !userId) {
+        if (process.env.NODE_ENV === 'development') {
+            console.log(`[${timestamp}] /api/initial-sync - Invalid request: missing accountId or userId`)
+        }
+        return NextResponse.json({ error: "INVALID_REQUEST" }, { status: 400 });
+    }
+
+    if (process.env.NODE_ENV === 'development') {
+        console.log(`[${timestamp}] /api/initial-sync - Looking up account:`, { accountId, userId })
+    }
 
     const dbAccount = await db.account.findUnique({
         where: {
@@ -17,7 +32,27 @@ export const POST = async (req: NextRequest) => {
             userId,
         }
     })
-    if (!dbAccount) return NextResponse.json({ error: "ACCOUNT_NOT_FOUND" }, { status: 404 });
+    
+    if (!dbAccount) {
+        if (process.env.NODE_ENV === 'development') {
+            console.error(`[${timestamp}] /api/initial-sync - Account not found:`, { accountId, userId })
+            // Let's also check if the account exists with different criteria
+            const allUserAccounts = await db.account.findMany({
+                where: { userId },
+                select: { id: true, emailAddress: true, name: true }
+            })
+            console.log(`[${timestamp}] /api/initial-sync - Available accounts for user:`, allUserAccounts)
+        }
+        return NextResponse.json({ error: "ACCOUNT_NOT_FOUND" }, { status: 404 });
+    }
+    
+    if (process.env.NODE_ENV === 'development') {
+        console.log(`[${timestamp}] /api/initial-sync - Account found:`, {
+            id: dbAccount.id,
+            email: dbAccount.emailAddress,
+            hasToken: !!dbAccount.token
+        })
+    }
 
     const account = new Account(dbAccount.token)
     await account.createSubscription()

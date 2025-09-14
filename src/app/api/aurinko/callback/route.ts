@@ -82,20 +82,40 @@ export const GET = async (req: NextRequest) => {
         })
     }
 
-    await db.account.upsert({
+    const accountData = {
+        id: token.accountId.toString(),
+        userId,
+        token: token.accessToken,
+        provider: 'Aurinko',
+        emailAddress: accountDetails.email,
+        name: accountDetails.name
+    }
+    
+    if (process.env.NODE_ENV === 'development') {
+        console.log(`[${timestamp}] /api/aurinko/callback - Upserting account:`, {
+            accountId: accountData.id,
+            userId: accountData.userId,
+            email: accountData.emailAddress,
+            name: accountData.name,
+            hasToken: !!accountData.token
+        })
+    }
+    
+    const upsertedAccount = await db.account.upsert({
         where: { id: token.accountId.toString() },
-        create: {
-            id: token.accountId.toString(),
-            userId,
-            token: token.accessToken,
-            provider: 'Aurinko',
-            emailAddress: accountDetails.email,
-            name: accountDetails.name
-        },
+        create: accountData,
         update: {
             token: token.accessToken,
         }
     })
+    
+    if (process.env.NODE_ENV === 'development') {
+        console.log(`[${timestamp}] /api/aurinko/callback - Account upserted:`, {
+            id: upsertedAccount.id,
+            userId: upsertedAccount.userId,
+            email: upsertedAccount.emailAddress
+        })
+    }
     
     if (process.env.NODE_ENV === 'development') {
         console.log(`[${timestamp}] /api/aurinko/callback - Account upserted successfully`)

@@ -11,8 +11,24 @@ import { FREE_CREDITS_PER_DAY } from "@/app/constants";
 export const authoriseAccountAccess = async (accountId: string, userId: string) => {
     // Validate input parameters
     if (!accountId || !userId) {
+        console.error(`[authoriseAccountAccess] Missing parameters - accountId: ${accountId}, userId: ${userId}`)
         throw new Error("Missing accountId or userId")
     }
+    
+    console.log(`[authoriseAccountAccess] Looking for account - accountId: ${accountId}, userId: ${userId}`)
+    
+    // First, let's check all accounts for this user to debug
+    const allUserAccounts = await db.account.findMany({
+        where: {
+            userId: userId,
+        },
+        select: {
+            id: true, emailAddress: true, name: true, token: true
+        }
+    })
+    
+    console.log(`[authoriseAccountAccess] Found ${allUserAccounts.length} accounts for user ${userId}:`, 
+        allUserAccounts.map(acc => ({ id: acc.id, email: acc.emailAddress, hasToken: !!acc.token })))
     
     const account = await db.account.findFirst({
         where: {
@@ -25,12 +41,16 @@ export const authoriseAccountAccess = async (accountId: string, userId: string) 
     })
     
     if (!account) {
-        // More descriptive error message
+        console.error(`[authoriseAccountAccess] Account not found - accountId: ${accountId}, userId: ${userId}`)
+        console.error(`[authoriseAccountAccess] Available accounts for user:`, allUserAccounts.map(acc => acc.id))
         throw new Error(`Account not found for accountId: ${accountId} and userId: ${userId}`)
     }
     
+    console.log(`[authoriseAccountAccess] Account found - id: ${account.id}, email: ${account.emailAddress}, hasToken: ${!!account.token}`)
+    
     // Validate that the account has a valid token
     if (!account.token) {
+        console.error(`[authoriseAccountAccess] Account ${accountId} has no valid authentication token`)
         throw new Error(`Account ${accountId} has no valid authentication token`)
     }
     

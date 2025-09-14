@@ -16,7 +16,7 @@ const useThreads = () => {
         tab
     }, { enabled: !!accountId && accountId.trim() !== '' && !!tab, placeholderData: (e) => e, refetchInterval: 1000 * 5 })
 
-    // Handle authentication errors
+    // Handle authentication and account errors
     React.useEffect(() => {
         if (accountsError?.message === 'Unauthorized' || threadsError?.message === 'Unauthorized') {
             toast.error('Please sign in to continue', {
@@ -27,6 +27,21 @@ const useThreads = () => {
                     }
                 }
             })
+        } else if (threadsError?.message?.includes('Account not found')) {
+            console.error('Account not found error:', threadsError.message)
+            toast.error('Account not found. Please reconnect your email account.', {
+                action: {
+                    label: 'Reconnect',
+                    onClick: () => {
+                        // Clear the stored accountId and redirect to mail page to select account
+                        localStorage.removeItem('accountId')
+                        window.location.reload()
+                    }
+                }
+            })
+        } else if (accountsError || threadsError) {
+            console.error('Mail error:', { accountsError, threadsError })
+            toast.error('Error loading mail data. Please try again.')
         }
     }, [accountsError, threadsError])
 

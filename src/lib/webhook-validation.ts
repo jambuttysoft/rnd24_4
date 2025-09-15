@@ -19,7 +19,7 @@ const AurinkoWebhookPayloadSchema = z.object({
         threadId: z.string().min(1, 'Thread ID cannot be empty')
       }).optional()
     })
-  ).min(0, 'Payloads must be an array')
+  ).min(0, 'Payloads must be an array').optional()
 });
 
 // Схема для валидации заголовков webhook

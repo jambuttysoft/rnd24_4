@@ -5,6 +5,7 @@ import { formatDistanceToNow } from "date-fns"
 
 import { cn } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Separator } from "@/components/ui/separator"
 import { useThread } from "@/app/mail/use-thread"
@@ -19,7 +20,7 @@ import { isSearchingAtom } from "./search-bar"
 import { format } from "date-fns";
 
 export function ThreadList() {
-  const { threads, isFetching } = useThreads();
+  const { threads, isFetching, fetchNextPage, hasNextPage, isFetchingNextPage } = useThreads();
 
   const [threadId, setThreadId] = useThread();
   const [parent] = useAutoAnimate(/* optional config */);
@@ -112,6 +113,18 @@ export function ThreadList() {
             ))}
           </React.Fragment>
         ))}
+        {hasNextPage && (
+          <div className="flex justify-center p-4">
+            <Button 
+              variant="outline" 
+              onClick={() => fetchNextPage()}
+              disabled={isFetchingNextPage}
+              className="w-full"
+            >
+              {isFetchingNextPage ? 'Загружаем...' : 'Загрузить еще'}
+            </Button>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -108,34 +108,20 @@ const AskAI = ({ isCollapsed }: { isCollapsed: boolean }) => {
                             return
                         }
                         handleSubmit(e)
-                    }} className="flex w-full">
+                    }} className="flex w-full relative">
                         <input
                             type="text"
                             onChange={handleInputChange}
                             value={input}
-                            className="py- relative h-9 placeholder:text-[13px] flex-grow rounded-full border border-gray-200 bg-white px-3 text-[15px] outline-none placeholder:text-gray-400 focus-visible:ring-0 focus-visible:ring-blue-500/20 focus-visible:ring-offset-1
+                            className="relative z-20 h-9 placeholder:text-[13px] flex-grow rounded-full border border-gray-200 bg-white px-3 text-[15px] outline-none placeholder:text-gray-400 focus-visible:ring-0 focus-visible:ring-blue-500/20 focus-visible:ring-offset-1
             dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-400 dark:focus-visible:ring-blue-500/20 dark:focus-visible:ring-offset-1 dark:focus-visible:ring-offset-gray-700
             "
                             placeholder={accountId ? "Ask AI anything about your emails" : "Please select an account first..."}
                             disabled={!accountId}
                         />
-                        <motion.div
-                            key={messages.length}
-                            layout="position"
-                            className="pointer-events-none absolute z-10 flex h-9 w-[250px] items-center overflow-hidden break-words rounded-full bg-gray-200 [word-break:break-word] dark:bg-gray-800"
-                            layoutId={`container-[${messages.length}]`}
-                            transition={transitionDebug}
-                            initial={{ opacity: 0.6, zIndex: -1 }}
-                            animate={{ opacity: 0.6, zIndex: -1 }}
-                            exit={{ opacity: 1, zIndex: 1 }}
-                        >
-                            <div className="px-3 py-2 text-[15px] leading-[15px] text-gray-900 dark:text-gray-100">
-                                {input}
-                            </div>
-                        </motion.div>
                         <button
                             type="submit"
-                            className="ml-2 flex h-9 w-9 items-center justify-center rounded-full bg-gray-200
+                            className="ml-2 flex h-9 w-9 items-center justify-center rounded-full bg-gray-200 relative z-20
             dark:bg-gray-800"
                             disabled={!accountId}
                         >

@@ -9,12 +9,29 @@ const useThreads = () => {
     const [accountId] = useLocalStorage('accountId', '')
     const [tab] = useLocalStorage('normalhuman-tab', 'inbox')
     const [done] = useLocalStorage('normalhuman-done', false)
-    const queryKey = getQueryKey(api.mail.getThreads, { accountId, tab, done }, 'query')
-    const { data: threads, isFetching, refetch, error: threadsError } = api.mail.getThreads.useQuery({
+    const queryKey = getQueryKey(api.mail.getThreads, { accountId, tab, done }, 'infinite')
+    const { 
+        data, 
+        isFetching, 
+        refetch, 
+        error: threadsError,
+        fetchNextPage,
+        hasNextPage,
+        isFetchingNextPage
+    } = api.mail.getThreads.useInfiniteQuery({
         accountId,
         done,
-        tab
-    }, { enabled: !!accountId && accountId.trim() !== '' && !!tab, placeholderData: (e) => e, refetchInterval: 1000 * 5 })
+        tab,
+        limit: 15
+    }, {
+        enabled: !!accountId && accountId.trim() !== '' && !!tab,
+        refetchInterval: 1000 * 5,
+        getNextPageParam: (lastPage) => lastPage.nextCursor
+    })
+    
+    const threads = React.useMemo(() => {
+        return data?.pages.flatMap(page => page.threads) ?? []
+    }, [data])
 
     // Handle authentication and account errors
     React.useEffect(() => {
@@ -52,7 +69,10 @@ const useThreads = () => {
         refetch,
         accounts,
         queryKey,
-        accountId
+        accountId,
+        fetchNextPage,
+        hasNextPage,
+        isFetchingNextPage
     }
 }
 

@@ -102,7 +102,9 @@ export const mailRouter = createTRPCRouter({
     getThreads: protectedProcedure.input(z.object({
         accountId: z.string().min(1, "Account ID cannot be empty"),
         tab: z.string(),
-        done: z.boolean()
+        done: z.boolean(),
+        cursor: z.string().optional(),
+        limit: z.number().min(1).max(50).default(15)
     })).query(async ({ ctx, input }) => {
         const account = await authoriseAccountAccess(input.accountId, ctx.auth.userId)
 
@@ -138,12 +140,23 @@ export const mailRouter = createTRPCRouter({
                     }
                 }
             },
-            take: 15,
+            take: input.limit + 1, // Take one extra to check if there are more
+            cursor: input.cursor ? { id: input.cursor } : undefined,
             orderBy: {
                 lastMessageDate: "desc"
             }
         })
-        return threads
+        
+        let nextCursor: string | undefined = undefined
+        if (threads.length > input.limit) {
+            const nextItem = threads.pop() // Remove the extra item
+            nextCursor = nextItem?.id
+        }
+        
+        return {
+            threads,
+            nextCursor
+        }
     }),
 
     getThreadById: protectedProcedure.input(z.object({

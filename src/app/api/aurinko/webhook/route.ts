@@ -4,6 +4,8 @@ import axios from "axios";
 import Account from "@/lib/account";
 import { db } from "@/server/db";
 import { waitUntil } from "@vercel/functions";
+import { validateWebhookPayload, validateWebhookHeaders } from "@/lib/webhook-validation";
+import { WebhookValidationError, AurinkoAPIError } from "@/lib/errors";
 
 const AURINKO_SIGNING_SECRET = process.env.AURINKO_SIGNING_SECRET;
 
@@ -69,22 +71,31 @@ export const POST = async (req: NextRequest) => {
         }
         return new Response("Unauthorized", { status: 401 });
     }
-    type AurinkoNotification = {
-        subscription: number;
-        resource: string;
-        accountId: number;
-        error?: string;
-        lifecycleEvent?: string;
-        payloads: {
-            id: string;
-            changeType: string;
-            attributes: {
-                threadId: string;
-            };
-        }[];
-    };
-
-    const payload = JSON.parse(body) as AurinkoNotification;
+    let payload;
+    try {
+        // Validate webhook headers
+        const headers = {
+            'x-aurinko-request-timestamp': aurinkoTimestamp,
+            'x-aurinko-signature': signature
+        };
+        validateWebhookHeaders(headers);
+        
+        // Parse and validate payload
+        const parsedPayload = JSON.parse(body);
+        payload = validateWebhookPayload(parsedPayload);
+        
+        if (process.env.NODE_ENV === 'development') {
+            console.log(`[${timestamp}] /api/aurinko/webhook - Payload validated successfully`);
+        }
+    } catch (error) {
+        console.error(`[${timestamp}] /api/aurinko/webhook - Validation error:`, error);
+        
+        if (error instanceof WebhookValidationError) {
+            return new Response(`Validation Error: ${error.message}`, { status: 400 });
+        }
+        
+        return new Response('Invalid webhook payload', { status: 400 });
+    }
     
     if (process.env.NODE_ENV === 'development') {
         console.log(`[${timestamp}] /api/aurinko/webhook - Parsed payload:`, JSON.stringify(payload, null, 2))
@@ -94,21 +105,35 @@ export const POST = async (req: NextRequest) => {
     
     // Handle error notifications (like 'Active token is missing')
     if (payload.error || payload.lifecycleEvent === 'error') {
-        console.error('Webhook error received:', payload.error || 'Unknown error');
+        const errorMessage = payload.error || 'Unknown error';
+        console.error(`[${timestamp}] /api/aurinko/webhook - Webhook error received:`, {
+            error: errorMessage,
+            accountId: payload.accountId,
+            subscription: payload.subscription,
+            lifecycleEvent: payload.lifecycleEvent
+        });
         
         if (payload.error === 'Active token is missing') {
-            console.log('Token missing for account:', payload.accountId);
-            // Mark account as needing re-authorization
-            await db.account.update({
-                where: {
-                    id: payload.accountId.toString()
-                },
-                data: {
-                    nextDeltaToken: null // Reset delta token to force re-sync
-                }
-            }).catch(error => {
-                console.error('Failed to update account after token error:', error);
-            });
+            console.log(`[${timestamp}] /api/aurinko/webhook - Token missing for account:`, payload.accountId);
+            
+            try {
+                // Mark account as needing re-authorization
+                await db.account.update({
+                    where: {
+                        id: payload.accountId.toString()
+                    },
+                    data: {
+                        nextDeltaToken: null // Reset delta token to force re-sync
+                    }
+                });
+                console.log(`[${timestamp}] /api/aurinko/webhook - Account ${payload.accountId} marked for re-authorization`);
+            } catch (dbError) {
+                console.error(`[${timestamp}] /api/aurinko/webhook - Failed to update account after token error:`, {
+                    accountId: payload.accountId,
+                    error: dbError
+                });
+                return new Response('Database error while processing token error', { status: 500 });
+            }
         }
         
         return new Response('Error notification processed', { status: 200 });
@@ -118,38 +143,63 @@ export const POST = async (req: NextRequest) => {
         console.log(`[${timestamp}] /api/aurinko/webhook - Looking up account:`, payload.accountId)
     }
     
-    const account = await db.account.findUnique({
-        where: {
-            id: payload.accountId.toString()
-        }
-    })
+    let account;
+    try {
+        account = await db.account.findUnique({
+            where: {
+                id: payload.accountId.toString()
+            }
+        });
+    } catch (dbError) {
+        console.error(`[${timestamp}] /api/aurinko/webhook - Database error while looking up account:`, {
+            accountId: payload.accountId,
+            error: dbError
+        });
+        return new Response("Database error", { status: 500 });
+    }
+    
     if (!account) {
-        if (process.env.NODE_ENV === 'development') {
-            console.log(`[${timestamp}] /api/aurinko/webhook - Account not found:`, payload.accountId)
-        }
+        console.warn(`[${timestamp}] /api/aurinko/webhook - Account not found:`, {
+            accountId: payload.accountId,
+            subscription: payload.subscription
+        });
         return new Response("Account not found", { status: 404 });
     }
     
     if (process.env.NODE_ENV === 'development') {
         console.log(`[${timestamp}] /api/aurinko/webhook - Account found:`, account.id)
     }
-    const acc = new Account(account.token)
     
-    if (process.env.NODE_ENV === 'development') {
-        console.log(`[${timestamp}] /api/aurinko/webhook - Starting email sync for account:`, account.id)
+    try {
+        const acc = new Account(account.token);
+        
+        if (process.env.NODE_ENV === 'development') {
+            console.log(`[${timestamp}] /api/aurinko/webhook - Starting email sync for account:`, account.id)
+        }
+        
+        waitUntil(acc.syncEmails().then(() => {
+            console.log(`[${timestamp}] /api/aurinko/webhook - Email sync completed successfully for account:`, account.id);
+        }).catch((syncError) => {
+            console.error(`[${timestamp}] /api/aurinko/webhook - Email sync failed for account ${account.id}:`, {
+                accountId: account.id,
+                error: syncError instanceof Error ? {
+                    name: syncError.name,
+                    message: syncError.message,
+                    stack: syncError.stack
+                } : syncError
+            });
+        }));
+    } catch (error) {
+        console.error(`[${timestamp}] /api/aurinko/webhook - Failed to initialize Account or start sync:`, {
+            accountId: account.id,
+            error: error instanceof Error ? {
+                name: error.name,
+                message: error.message,
+                stack: error.stack
+            } : error
+        });
+        return new Response("Failed to process webhook", { status: 500 });
     }
-    
-    waitUntil(acc.syncEmails().then(() => {
-        if (process.env.NODE_ENV === 'development') {
-            console.log(`[${timestamp}] /api/aurinko/webhook - Email sync completed for account:`, account.id)
-        }
-        console.log("Synced emails")
-    }).catch((error) => {
-        if (process.env.NODE_ENV === 'development') {
-            console.error(`[${timestamp}] /api/aurinko/webhook - Email sync failed:`, error)
-        }
-        console.error("Email sync failed:", error)
-    }))
 
     // Process the notification payload as needed
     

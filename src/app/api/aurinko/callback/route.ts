@@ -1,9 +1,11 @@
-import { getAccountDetails, getAurinkoToken } from "@/lib/aurinko";
+import { getAccountDetails, exchangeCodeForAccessToken } from "@/lib/aurinko";
 import { waitUntil } from '@vercel/functions'
 import { db } from "@/server/db";
 import { auth } from "@clerk/nextjs/server";
 import axios from "axios";
 import { type NextRequest, NextResponse } from "next/server";
+import { withAurinkoRetry } from "@/lib/retry";
+import { handleAurinkoError, AurinkoAPIError } from "@/lib/errors";
 
 export const GET = async (req: NextRequest) => {
     const timestamp = new Date().toISOString()
@@ -57,17 +59,23 @@ export const GET = async (req: NextRequest) => {
         console.log(`[${timestamp}] /api/aurinko/callback - Exchanging code for token...`)
     }
     
-    const token = await getAurinkoToken(code as string)
-    if (!token) {
+    let token;
+    try {
+        token = await exchangeCodeForAccessToken(code as string);
         if (process.env.NODE_ENV === 'development') {
-            console.log(`[${timestamp}] /api/aurinko/callback - Failed to exchange code for token`)
+            console.log(`[${timestamp}] /api/aurinko/callback - Token received successfully`)
         }
-        return NextResponse.json({ error: "Failed to fetch token" }, { status: 400 });
+    } catch (error) {
+        console.error(`[${timestamp}] /api/aurinko/callback - Token exchange failed:`, error);
+        if (error instanceof AurinkoAPIError) {
+             return NextResponse.json({ 
+                 error: "Failed to exchange authorization code", 
+                 details: error.message 
+             }, { status: error.status || 400 });
+        }
+        return NextResponse.json({ error: "Failed to fetch token" }, { status: 500 });
     }
-    
-    if (process.env.NODE_ENV === 'development') {
-        console.log(`[${timestamp}] /api/aurinko/callback - Token received successfully`)
-    }
+
     if (process.env.NODE_ENV === 'development') {
         console.log(`[${timestamp}] /api/aurinko/callback - Getting account details...`)
     }

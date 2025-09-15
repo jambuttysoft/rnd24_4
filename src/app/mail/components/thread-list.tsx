@@ -121,7 +121,7 @@ export function ThreadList() {
               disabled={isFetchingNextPage}
               className="w-full"
             >
-              {isFetchingNextPage ? 'Загружаем...' : 'Загрузить еще'}
+              {isFetchingNextPage ? 'Loading...' : 'Load more'}
             </Button>
           </div>
         )}

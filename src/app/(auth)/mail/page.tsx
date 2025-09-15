@@ -1,9 +1,5 @@
 
 
-const MailPage = dynamic(() => import("@/app/mail/index"), {
-  loading: () => <div>Loading...</div>,
-  ssr: false,
-})
 import { ModeToggle } from "@/components/theme-toggle"
 import { UserButton } from "@clerk/nextjs"
 import dynamic from "next/dynamic"
@@ -11,6 +7,13 @@ import { Button } from "@/components/ui/button"
 import ComposeButton from "@/app/mail/components/compose-button"
 import WebhookDebugger from "@/app/mail/components/webhook-debugger"
 import TopAccountSwitcher from "./top-account-switcher"
+// import LoadMoreButton from "@/app/mail/components/load-more-button"
+
+const MailPage = dynamic(() => import("@/app/mail/index"), {
+  loading: () => <div>Loading...</div>,
+  ssr: false,
+})
+
 export default function Home() {
   // return <AuthoriseButton />
   return <>
@@ -18,6 +21,7 @@ export default function Home() {
       <div className="flex items-center gap-4">
         <UserButton />
         <ModeToggle />
+        {/* <LoadMoreButton /> */}
         <ComposeButton />
         {process.env.NODE_ENV === 'development' && (
           <WebhookDebugger />

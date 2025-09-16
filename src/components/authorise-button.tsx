@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button"
 import { getAurinkoAuthorizationUrl } from "@/lib/aurinko"
 import { api } from "@/trpc/react"
 import { useLocalStorage } from "usehooks-ts"
+import { toast } from "sonner"
 
 export default function AuthoriseButton() {
     const syncEmails = api.mail.syncEmails.useMutation()
@@ -15,8 +16,25 @@ export default function AuthoriseButton() {
             Sync Emails
         </Button>
         <Button size='sm' variant={'outline'} onClick={async () => {
-            const url = await getAurinkoAuthorizationUrl('Google')
-            window.location.href = url
+            try {
+                const url = await getAurinkoAuthorizationUrl('Google')
+                window.location.href = url
+            } catch (error) {
+                const errorMessage = (error as Error).message
+                if (errorMessage.includes('maximum number of accounts')) {
+                    toast.error('Account limit reached', {
+                        description: errorMessage,
+                        action: {
+                            label: 'Upgrade Plan',
+                            onClick: () => {
+                                window.location.href = '/pricing'
+                            }
+                        }
+                    })
+                } else {
+                    toast.error(errorMessage)
+                }
+            }
         }}>
             Authorize Email
         </Button>

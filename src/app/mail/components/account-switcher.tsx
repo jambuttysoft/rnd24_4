@@ -53,7 +53,20 @@ export function AccountSwitcher({
               const url = await getAurinkoAuthorizationUrl('Google')
               window.location.href = url
             } catch (error) {
-              toast.error((error as Error).message)
+              const errorMessage = (error as Error).message
+              if (errorMessage.includes('maximum number of accounts')) {
+                toast.error('Account limit reached', {
+                  description: errorMessage,
+                  action: {
+                    label: 'Upgrade Plan',
+                    onClick: () => {
+                      window.location.href = '/pricing'
+                    }
+                  }
+                })
+              } else {
+                toast.error(errorMessage)
+              }
             }
           }
         },
@@ -103,7 +116,20 @@ export function AccountSwitcher({
               const url = await getAurinkoAuthorizationUrl('Google')
               window.location.href = url
             } catch (error) {
-              toast.error((error as Error).message)
+              const errorMessage = (error as Error).message
+              if (errorMessage.includes('maximum number of accounts')) {
+                toast.error('Account limit reached', {
+                  description: errorMessage,
+                  action: {
+                    label: 'Upgrade Plan',
+                    onClick: () => {
+                      window.location.href = '/pricing'
+                    }
+                  }
+                })
+              } else {
+                toast.error(errorMessage)
+              }
             }
           }} className="relative flex hover:bg-gray-50 w-full cursor-pointer items-center rounded-sm py-1.5 pl-2 pr-8 text-sm outline-none focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50">
             <Plus className="size-4 mr-1" />

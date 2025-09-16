@@ -31,10 +31,13 @@ export async function POST(req: Request) {
         console.log('🟡 [API] Subscription status:', isSubscribed);
         
         if (!isSubscribed) {
+            const today = new Date().toDateString()
             const chatbotInteraction = await db.chatbotInteraction.findUnique({
                 where: {
-                    day: new Date().toDateString(),
-                    userId
+                    day_userId: {
+                        day: today,
+                        userId
+                    }
                 }
             })
             console.log('🟡 [API] Chatbot interaction:', chatbotInteraction);
@@ -43,8 +46,8 @@ export async function POST(req: Request) {
                 console.log('🟡 [API] Creating new chatbot interaction');
                 await db.chatbotInteraction.create({
                     data: {
-                        day: new Date().toDateString(),
-                        count: 1,
+                        day: today,
+                        count: 0,
                         userId
                     }
                 })
@@ -106,18 +109,29 @@ export async function POST(req: Request) {
             },
             onCompletion: async (completion) => {
                 console.log('🟢 [API] Stream completed:', completion);
-                const today = new Date().toDateString()
-                await db.chatbotInteraction.update({
-                    where: {
-                        userId,
-                        day: today
-                    },
-                    data: {
-                        count: {
-                            increment: 1
+                // Update the count for non-subscribed users
+                if (!isSubscribed) {
+                    const today = new Date().toDateString()
+                    console.log('🟡 [API] Updating chatbot interaction count');
+                    await db.chatbotInteraction.upsert({
+                        where: {
+                            day_userId: {
+                                day: today,
+                                userId
+                            }
+                        },
+                        update: {
+                            count: {
+                                increment: 1
+                            }
+                        },
+                        create: {
+                            day: today,
+                            count: 1,
+                            userId
                         }
-                    }
-                })
+                    })
+                }
                 console.log('🟢 [API] Chatbot interaction count updated');
             },
         });

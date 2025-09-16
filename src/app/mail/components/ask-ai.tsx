@@ -43,11 +43,10 @@ const AskAI = ({ isCollapsed }: { isCollapsed: boolean }) => {
         }
     }, [messages]);
 
-
-    if (isCollapsed) return null;
     return (
-        <div className='p-4 mb-14 relative z-30'>
-
+        <div className={cn('p-4 mb-14 relative z-30', {
+            'p-2': isCollapsed
+        })}>
             <PremiumBanner />
             <div className="h-4"></div>
             <motion.div className="flex flex-1 flex-col items-end justify-end pb-4 border p-4 rounded-lg bg-gray-100 shadow-inner dark:bg-gray-900">
@@ -73,7 +72,7 @@ const AskAI = ({ isCollapsed }: { isCollapsed: boolean }) => {
                 </div>
                 {messages.length > 0 && <div className="h-4"></div>}
                 <div className="w-full">
-                    {messages.length === 0 && <div className="mb-4">
+                    {messages.length === 0 && !isCollapsed && <div className="mb-4">
                         <div className='flex items-center gap-4'>
                             <SparklesIcon className='size-6 text-gray-500' />
                             <div>

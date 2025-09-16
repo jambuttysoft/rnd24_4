@@ -388,8 +388,10 @@ export const mailRouter = createTRPCRouter({
     getChatbotInteraction: protectedProcedure.query(async ({ ctx }) => {
         const chatbotInteraction = await ctx.db.chatbotInteraction.findUnique({
             where: {
-                day: new Date().toDateString(),
-                userId: ctx.auth.userId
+                day_userId: {
+                    day: new Date().toDateString(),
+                    userId: ctx.auth.userId
+                }
             }, select: { count: true }
         })
         const remainingCredits = FREE_CREDITS_PER_DAY - (chatbotInteraction?.count || 0)

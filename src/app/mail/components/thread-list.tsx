@@ -113,18 +113,7 @@ export function ThreadList() {
             ))}
           </React.Fragment>
         ))}
-        {hasNextPage && (
-          <div className="flex justify-center p-4">
-            <Button 
-              variant="destructive" 
-              onClick={() => fetchNextPage()}
-              disabled={isFetchingNextPage}
-              className="w-full bg-red-600 hover:bg-red-700 text-white font-semibold py-3 px-6 text-base shadow-lg"
-            >
-              {isFetchingNextPage ? 'Загружаю...' : '📧 Загрузить ещё письма'}
-            </Button>
-          </div>
-        )}
+
       </div>
     </div>
   );

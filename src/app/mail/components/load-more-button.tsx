@@ -10,12 +10,13 @@ const LoadMoreButton = () => {
 
     return (
         <Button 
-            variant="outline" 
+            variant="destructive" 
             size="sm"
             onClick={() => fetchNextPage()}
             disabled={isFetchingNextPage}
+            className="bg-red-600 hover:bg-red-700 text-white font-semibold px-4 py-2 shadow-md"
         >
-            {isFetchingNextPage ? 'Loading...' : 'Load more'}
+            {isFetchingNextPage ? '⏳ Загружаю...' : '📧 Загрузить ещё'}
         </Button>
     )
 }

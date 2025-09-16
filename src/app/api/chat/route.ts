@@ -16,12 +16,20 @@ const config = new Configuration({
 const openai = new OpenAIApi(config);
 
 export async function POST(req: Request) {
+    console.log('🟡 [API] Chat endpoint called');
+    
     try {
         const { userId } = await auth()
+        console.log('🟡 [API] User ID:', userId);
+        
         if (!userId) {
+            console.log('🔴 [API] Unauthorized - no user ID');
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
+        
         const isSubscribed = await getSubscriptionStatus()
+        console.log('🟡 [API] Subscription status:', isSubscribed);
+        
         if (!isSubscribed) {
             const chatbotInteraction = await db.chatbotInteraction.findUnique({
                 where: {
@@ -29,7 +37,10 @@ export async function POST(req: Request) {
                     userId
                 }
             })
+            console.log('🟡 [API] Chatbot interaction:', chatbotInteraction);
+            
             if (!chatbotInteraction) {
+                console.log('🟡 [API] Creating new chatbot interaction');
                 await db.chatbotInteraction.create({
                     data: {
                         day: new Date().toDateString(),
@@ -38,18 +49,25 @@ export async function POST(req: Request) {
                     }
                 })
             } else if (chatbotInteraction.count >= FREE_CREDITS_PER_DAY) {
+                console.log('🔴 [API] Limit reached:', chatbotInteraction.count);
                 return NextResponse.json({ error: "Limit reached" }, { status: 429 });
             }
         }
+        
         const { messages, accountId } = await req.json();
+        console.log('🟡 [API] Request data:', { messagesCount: messages?.length, accountId });
+        console.log('🟡 [API] Messages:', messages);
+        
         const oramaManager = new OramaManager(accountId)
+        console.log('🟡 [API] Initializing OramaManager...');
         await oramaManager.initialize()
 
         const lastMessage = messages[messages.length - 1]
+        console.log('🟡 [API] Last message:', lastMessage);
 
-
+        console.log('🟡 [API] Performing vector search...');
         const context = await oramaManager.vectorSearch({ prompt: lastMessage.content })
-        console.log(context.hits.length + ' hits found')
+        console.log('🟡 [API] Vector search results:', context.hits.length + ' hits found')
         // console.log(context.hits.map(hit => hit.document))
 
         const prompt = {
@@ -70,7 +88,7 @@ export async function POST(req: Request) {
       - Keep your responses concise and relevant to the user's questions or the email being composed.`
         };
 
-
+        console.log('🟡 [API] Calling OpenAI API...');
         const response = await openai.createChatCompletion({
             model: "gpt-4",
             messages: [
@@ -79,10 +97,15 @@ export async function POST(req: Request) {
             ],
             stream: true,
         });
+        
+        console.log('🟢 [API] OpenAI response received');
+        
         const stream = OpenAIStream(response, {
             onStart: async () => {
+                console.log('🟢 [API] Stream started');
             },
             onCompletion: async (completion) => {
+                console.log('🟢 [API] Stream completed:', completion);
                 const today = new Date().toDateString()
                 await db.chatbotInteraction.update({
                     where: {
@@ -95,11 +118,12 @@ export async function POST(req: Request) {
                         }
                     }
                 })
+                console.log('🟢 [API] Chatbot interaction count updated');
             },
         });
         return new StreamingTextResponse(stream);
     } catch (error) {
-        console.log(error)
+        console.error('🔴 [API] Error in chat endpoint:', error)
         return NextResponse.json({ error: "error" }, { status: 500 });
     }
 }

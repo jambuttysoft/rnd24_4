@@ -25,11 +25,21 @@ const AskAI = ({ isCollapsed }: { isCollapsed: boolean }) => {
             accountId,
         },
         onError: (error) => {
+            console.error('🔴 AI Chat Error:', error);
+            console.error('🔴 Error message:', error.message);
             if (error.message.includes('Limit reached')) {
                 toast.error('You have reached the limit for today. Please upgrade to pro to ask as many questions as you want')
             } else if (error.message.includes("don't have access to your email context")) {
                 toast.error('Please select an account first to access your email context')
             }
+        },
+        onResponse: (response) => {
+            console.log('🟢 AI Chat Response received:', response);
+            console.log('🟢 Response status:', response.status);
+            console.log('🟢 Response headers:', response.headers);
+        },
+        onFinish: (message) => {
+            console.log('🟢 AI Chat finished:', message);
         },
         initialMessages: [],
     });
@@ -101,11 +111,18 @@ const AskAI = ({ isCollapsed }: { isCollapsed: boolean }) => {
                     </div>
                     }
                     <form onSubmit={(e) => {
+                        console.log('🔵 Form submit triggered');
+                        console.log('🔵 Account ID:', accountId);
+                        console.log('🔵 Input value:', input);
+                        
                         if (!accountId) {
                             e.preventDefault()
+                            console.log('🔴 No account ID - preventing submit');
                             toast.error('Please select an account first to access your email context')
                             return
                         }
+                        
+                        console.log('🔵 Calling handleSubmit...');
                         handleSubmit(e)
                     }} className="flex w-full relative">
                         <input

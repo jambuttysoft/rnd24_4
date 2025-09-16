@@ -24,7 +24,7 @@ model User {
 
     accounts Account[]
 
-    chatbotInteraction ChatbotInteraction?
+    chatbotInteractions ChatbotInteraction[]
 }
 
 enum Role {
@@ -38,7 +38,7 @@ model ChatbotInteraction {
     day   String
     count Int    @default(1)
 
-    userId String? @unique
+    userId String?
     user   User?   @relation(fields: [userId], references: [id])
 
     @@unique([day, userId])

@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import ComposeButton from "@/app/mail/components/compose-button"
 import WebhookDebugger from "@/app/mail/components/webhook-debugger"
 import TopAccountSwitcher from "./top-account-switcher"
-// import LoadMoreButton from "@/app/mail/components/load-more-button"
+import LoadMoreButton from "@/app/mail/components/load-more-button"
 
 const MailPage = dynamic(() => import("@/app/mail/index"), {
   loading: () => <div>Loading...</div>,
@@ -21,7 +21,7 @@ export default function Home() {
       <div className="flex items-center gap-4">
         <UserButton />
         <ModeToggle />
-        {/* <LoadMoreButton /> */}
+        <LoadMoreButton />
         <ComposeButton />
         {process.env.NODE_ENV === 'development' && (
           <WebhookDebugger />

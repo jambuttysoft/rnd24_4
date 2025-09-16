@@ -46,7 +46,7 @@ const AskAI = ({ isCollapsed }: { isCollapsed: boolean }) => {
 
     if (isCollapsed) return null;
     return (
-        <div className='p-4 mb-14'>
+        <div className='p-4 mb-14 relative z-30'>
 
             <PremiumBanner />
             <div className="h-4"></div>
@@ -113,7 +113,7 @@ const AskAI = ({ isCollapsed }: { isCollapsed: boolean }) => {
                             type="text"
                             onChange={handleInputChange}
                             value={input}
-                            className="relative z-20 h-9 placeholder:text-[13px] flex-grow rounded-full border border-gray-200 bg-white px-3 text-[15px] outline-none placeholder:text-gray-400 focus-visible:ring-0 focus-visible:ring-blue-500/20 focus-visible:ring-offset-1
+                            className="relative z-30 h-9 placeholder:text-[13px] flex-grow rounded-full border border-gray-200 bg-white px-3 text-[15px] outline-none placeholder:text-gray-400 focus-visible:ring-0 focus-visible:ring-blue-500/20 focus-visible:ring-offset-1
             dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-400 dark:focus-visible:ring-blue-500/20 dark:focus-visible:ring-offset-1 dark:focus-visible:ring-offset-gray-700
             "
                             placeholder={accountId ? "Ask AI anything about your emails" : "Please select an account first..."}
@@ -121,7 +121,7 @@ const AskAI = ({ isCollapsed }: { isCollapsed: boolean }) => {
                         />
                         <button
                             type="submit"
-                            className="ml-2 flex h-9 w-9 items-center justify-center rounded-full bg-gray-200 relative z-20
+                            className="ml-2 flex h-9 w-9 items-center justify-center rounded-full bg-gray-200 relative z-30
             dark:bg-gray-800"
                             disabled={!accountId}
                         >

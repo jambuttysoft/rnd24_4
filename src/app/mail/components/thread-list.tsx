@@ -116,12 +116,12 @@ export function ThreadList() {
         {hasNextPage && (
           <div className="flex justify-center p-4">
             <Button 
-              variant="outline" 
+              variant="destructive" 
               onClick={() => fetchNextPage()}
               disabled={isFetchingNextPage}
-              className="w-full"
+              className="w-full bg-red-600 hover:bg-red-700 text-white font-semibold py-3 px-6 text-base shadow-lg"
             >
-              {isFetchingNextPage ? 'Loading...' : 'Load more'}
+              {isFetchingNextPage ? 'Загружаю...' : '📧 Загрузить ещё письма'}
             </Button>
           </div>
         )}

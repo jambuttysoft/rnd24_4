@@ -85,6 +85,11 @@ export function Mail({
               <AccountSwitcher isCollapsed={isCollapsed} />
             </div>
             <Separator />
+            {!isCollapsed && (
+              <div className="px-2 py-2">
+                <LoadMoreButton />
+              </div>
+            )}
             <SideBar isCollapsed={isCollapsed} />
             <div className="flex-1"></div>
             <AskAI isCollapsed={isCollapsed} />
@@ -119,9 +124,6 @@ export function Mail({
             </div>
             <Separator />
             <SearchBar />
-            <div className="px-4 py-2 border-b">
-              <LoadMoreButton />
-            </div>
             <TabsContent value="inbox" className="m-0">
               <ThreadList />
             </TabsContent>

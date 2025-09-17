@@ -26,6 +26,7 @@ import { useAtom } from "jotai"
 import AskAI from "./ask-ai"
 import LoadMoreButton from "./load-more-button"
 import DiagnosticButtons from "./diagnostic-buttons"
+import NavigationDiagnosticButton from "./navigation-diagnostic-button"
 
 interface MailProps {
   defaultLayout: number[] | undefined
@@ -119,20 +120,7 @@ export function Mail({
             )}
             {/* Кнопка в навигационной панели для диагностики */}
             {!isCollapsed && (
-              <div className="px-2 py-1">
-                <button 
-                  onClick={() => {
-                    console.log('🔍 DIAGNOSTIC: Navigation panel button clicked', {
-                      timestamp: new Date().toISOString(),
-                      location: 'Навигационная панель'
-                    })
-                    alert('Диагностическая кнопка: Навигационная панель')
-                  }}
-                  className="w-full bg-purple-500 hover:bg-purple-600 text-white font-bold py-2 px-4 rounded text-sm"
-                >
-                  🟣 НАВ
-                </button>
-              </div>
+              <NavigationDiagnosticButton />
             )}
             <SideBar isCollapsed={isCollapsed} />
             <div className="flex-1"></div>

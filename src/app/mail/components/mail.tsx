@@ -25,8 +25,7 @@ import SearchBar, { isSearchingAtom } from "./search-bar"
 import { useAtom } from "jotai"
 import AskAI from "./ask-ai"
 import LoadMoreButton from "./load-more-button"
-import DiagnosticButtons from "./diagnostic-buttons"
-import NavigationDiagnosticButton from "./navigation-diagnostic-button"
+
 
 interface MailProps {
   defaultLayout: number[] | undefined
@@ -42,35 +41,9 @@ export function Mail({
   const [done, setDone] = useLocalStorage('normalhuman-done', false)
   const [isCollapsed, setIsCollapsed] = React.useState(defaultCollapsed)
 
-  // Диагностическое логирование
-  React.useEffect(() => {
-    console.log('🔍 DIAGNOSTIC: Mail component mounted', {
-      timestamp: new Date().toISOString(),
-      component: 'Mail',
-      props: { defaultLayout, defaultCollapsed, navCollapsedSize },
-      state: { done, isCollapsed }
-    })
-    
-    return () => {
-      console.log('🔍 DIAGNOSTIC: Mail component unmounted', {
-        timestamp: new Date().toISOString(),
-        component: 'Mail'
-      })
-    }
-  }, [])
-
-  React.useEffect(() => {
-    console.log('🔍 DIAGNOSTIC: Mail state changed', {
-      timestamp: new Date().toISOString(),
-      component: 'Mail',
-      state: { done, isCollapsed }
-    })
-  }, [done, isCollapsed])
-
 
   return (
     <TooltipProvider delayDuration={0}>
-      <DiagnosticButtons />
       <ResizablePanelGroup
         direction="horizontal"
         onLayout={(sizes: number[]) => {
@@ -117,10 +90,6 @@ export function Mail({
               <div className="px-2 py-2">
                 <LoadMoreButton />
               </div>
-            )}
-            {/* Кнопка в навигационной панели для диагностики */}
-            {!isCollapsed && (
-              <NavigationDiagnosticButton />
             )}
             <SideBar isCollapsed={isCollapsed} />
             <div className="flex-1"></div>
